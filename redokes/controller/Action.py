@@ -18,14 +18,12 @@ class Action(object):
         self.action = None
         self.template = ''
         self.redirect = ''
-        self.params = {}
         self.do_render = True
         self.front_controller = None
         self._front_controller = None
         self.auto_template = True
         self.output_type = 'html'
         self.access = None
-        self.params = {}
     
     def __init__(self, front_controller, *args, **kwargs):
         self.init_defaults()
@@ -39,7 +37,7 @@ class Action(object):
         #Apply the kwargs
         self.util.apply_config(self, kwargs)
         #Set the front controller to be in the template
-        self.set_param('_front_controller', self.front_controller)
+        self.set_response_param('_front_controller', self.front_controller)
         #Initialize the logger
 #        self.logger = logging.getLogger("nooga")
         
@@ -202,19 +200,19 @@ class Action(object):
     def update_response_params(self, params):
         self.front_controller.response_manager.update_params(params)
     
-    def set_param(self, key, value=None):
-        self.params[key] = value
+    def get_response_param(self, key, value=None):
+        return self.front_controller.response_manager.get_param(key, value)
     
-    def set_params(self, dictionary):
-        self.params.update(dictionary)
-        
+    def get_response_params(self):
+        return self.front_controller.response_manager.get_params()
+    
     def send_headers(self):
         method_name = 'get_output_%s' % self.output_type
         if hasattr(self, method_name):
             return getattr(self, method_name)()
     
     def get_output_html(self):
-        return self.render_template(self.template, self.params)
+        return self.render_template(self.template, self.get_response_params())
     
     def get_output_403(self):
         return HttpResponseForbidden("Default 403 template")
@@ -234,9 +232,6 @@ class Action(object):
     
     def get_request_params(self):
         return self.front_controller.request_parser.params
-    
-    def get_response_params(self):
-        return self.front_controller.response_manager.get_params()
     
     def get_user(self):
         return self.front_controller.request_parser.request.user
