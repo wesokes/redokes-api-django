@@ -15,7 +15,6 @@ class Action(object):
     def init_defaults(self):
         self.request = None
         self.parser = None
-        self.action = None
         self.template = ''
         self.redirect = ''
         self.do_render = True
@@ -32,12 +31,11 @@ class Action(object):
         self.front_controller = front_controller
         self.request = front_controller.request_parser.request
         self.parser = front_controller.request_parser
-        self.action = front_controller.request_parser.action
         
         #Apply the kwargs
         self.util.apply_config(self, kwargs)
         #Set the front controller to be in the template
-        self.set_response_param('_front_controller', self.front_controller)
+#        self.set_response_param('_front_controller', self.front_controller)
         #Initialize the logger
 #        self.logger = logging.getLogger("nooga")
         
@@ -159,7 +157,6 @@ class Action(object):
     
     def forward(self, action, module=None, controller=None):
         self.parser.action = action
-        self.action = action
         if module is not None:
             self.parser.module = module
         if controller is not None:
@@ -182,7 +179,7 @@ class Action(object):
             self.output_type = '403'
     
     def get_action_method_name(self):
-        return self.front_controller.request_parser.get_action_name(self.action)
+        return self.front_controller.request_parser.get_action_name(self.parser.action)
     
     def action_exists(self):
         #Check if the view instance has the action

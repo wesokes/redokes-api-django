@@ -43,6 +43,9 @@ class Lookup(object):
         #Set the params
         self.params = params
         
+        if self.default_queryset is None:
+            self.default_queryset = self.model.objects.all()
+        
         #Apply the kwargs
         redokes.util.apply_config(self, kwargs)
         
@@ -101,10 +104,7 @@ class Lookup(object):
             self.add_filter(key, value)
     
     def get_query_set(self, fields=None):
-        if self.default_queryset:
-            self.query_set = self.default_queryset
-        elif self.model:
-            self.query_set = self.model.objects.all()
+        self.query_set = self.default_queryset
         
         self.query_set = self.query_set.order_by(
             *self.get_order()

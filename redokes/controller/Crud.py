@@ -6,16 +6,20 @@ class Crud(Api):
     
     def init_defaults(self):
         Api.init_defaults(self)
-        self.model_class = False
-        self.lookup_class = False
+        
         self.form_class = False
         self.primary_key = False
-        self.model_instance = False
+        
+        self.model_class = False
+        self.lookup_class = False
         self.lookup_instance = False
+        
         self.access_module = None
         self.access_model = None
     
     def init(self):
+        Api.init(self)
+        
         #Create the lookup class
         if self.lookup_class:
             self.lookup_instance = self.lookup_class(params=self.front_controller.request_parser.params)
@@ -58,9 +62,13 @@ class Crud(Api):
                         "access": "{0}.{1}_{2}".format(self.access_module, action_permission_map[action], self.access_model)
                     }
                 })
-            
-        #call the parent
-        return Api.init(self)
+    
+    def get_item_ids(self):
+        ids = self.get_request_param('id', [])
+        if type(ids) is not list:
+            ids = [ids]
+        
+        return ids
     
     def create_action(self):
         if not self.form_class or not self.model_class or not self.lookup_class:
@@ -145,8 +153,6 @@ class Crud(Api):
             self.set_response_param('meta', meta)
             self.set_response_param('records', rows)
             
-                
-            
     def delete_action(self):
         """
         Looks for the param of id.
@@ -157,9 +163,7 @@ class Crud(Api):
             return
         
         #Process the ids
-        ids = self.get_request_param('id', [])
-        if type(ids) is not list:
-            ids = [ids]
+        ids = self.get_item_ids()
             
         #Get the objects to delete
         delete_items = self.model_class.objects.filter(pk__in=ids)
