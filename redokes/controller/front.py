@@ -1,5 +1,5 @@
-from redokes.request.Parser import Parser
-from redokes.Response import Manager as ResponseManager
+from redokes.request.parser import Parser
+from redokes.response import Manager as ResponseManager
 from django.http import Http404
 from django.conf import settings
 
