@@ -1,14 +1,11 @@
-import logging
 import redokes.util
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import Http404
-from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django import template
 from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
 
 class Action(object):
     util = redokes.util

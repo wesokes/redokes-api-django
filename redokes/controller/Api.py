@@ -1,7 +1,6 @@
-from redokes.controller.Action import Action
+from redokes.controller.action import Action
 from django.http import HttpResponse
 from django.forms.models import model_to_dict
-import redokes.util
 
 class Api(Action):
     def init_defaults(self):

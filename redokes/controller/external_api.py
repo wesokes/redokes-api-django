@@ -1,4 +1,4 @@
-from redokes.controller.Crud import Crud
+from redokes.controller.crud import Crud
 
 class ExternalApi(Crud):
     

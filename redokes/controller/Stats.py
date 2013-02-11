@@ -1,8 +1,4 @@
-from django.db.models import Q
-from redokes.controller.Api import Api
-from django.db.models import Avg
-from django.db.models import Count
-from django.db.models import Max
+from redokes.controller.api import Api
 
 class Stats(Api):
     

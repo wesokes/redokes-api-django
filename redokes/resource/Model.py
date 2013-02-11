@@ -1,4 +1,4 @@
-from redokes.database.Lookup import Lookup
+from redokes.database.lookup import Lookup
 
 class Model(Lookup):
     

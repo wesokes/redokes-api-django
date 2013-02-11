@@ -1,4 +1,4 @@
-from redokes.controller.Crud import Crud
+from redokes.controller.crud import Crud
 from django.utils import feedgenerator
 from django.http import HttpResponse
 

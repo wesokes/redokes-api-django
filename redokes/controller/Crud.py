@@ -1,5 +1,4 @@
-from redokes.controller.Api import Api
-from django.http import Http404
+from redokes.controller.api import Api
 from django.conf import settings
 
 class Crud(Api):

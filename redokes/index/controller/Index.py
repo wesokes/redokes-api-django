@@ -1,4 +1,4 @@
-from redokes.controller.Action import Action
+from redokes.controller.action import Action
 
 class Index(Action):
     

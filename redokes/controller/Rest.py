@@ -1,6 +1,4 @@
-from redokes.controller.Crud import Crud
-from django.http import Http404
-from django.conf import settings
+from redokes.controller.crud import Crud
 
 class Rest(Crud):
     
