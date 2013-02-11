@@ -16,7 +16,6 @@ class Stats(Api):
         
         self.entity_class = None
         self.entity_query_set = None
-        self.entity_query_set = None
         self.entity_values = []
         self.entity_excludes = {}
         self.entity_legend_prefix = ''

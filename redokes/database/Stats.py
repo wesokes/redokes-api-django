@@ -231,7 +231,7 @@ class Stats(object):
         self.rows = [record for record in self.get_records()]
 #        self.populate_missing_rows()
         self.format_rows()
-        self.combine_rows();
+        self.combine_rows()
         return self.rows
     
     def populate_missing_rows(self):

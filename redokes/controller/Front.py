@@ -28,7 +28,7 @@ class Front(object):
         
         #Try to import the controller
         controller = None
-        
+
         for path in paths:
             try:
                 controller = __import__(path, globals(), locals(), [import_controller], -1)
@@ -39,7 +39,7 @@ class Front(object):
 #                print 'did not find {0}'.format(path)
             if self.controller_instance is not None:
                 continue
-        
+
         if controller is None:
             #Raise a 404 if the controller is not found
             print import_path + " - controller class not found"
