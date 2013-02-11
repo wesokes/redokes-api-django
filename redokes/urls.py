@@ -4,8 +4,9 @@ from django.conf.urls import patterns, include, url
 # from django.contrib import admin
 # admin.autodiscover()
 
-urlpatterns = patterns('',
-    
+urlpatterns = patterns(
+    '',
+
     # url(r'^$', 'redokes.views.home', name='home'),
     # url(r'^redokes/', include('redokes.foo.urls')),
 
@@ -17,4 +18,3 @@ urlpatterns = patterns('',
     (r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': '/static/index/img/favicon.ico'}),
     url(r'^(.*?)$', 'redokes.views.route')
 )
-

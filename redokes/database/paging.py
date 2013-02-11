@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+
 def get_paged_set(query_set, limit=10, page=1):
     paginator = Paginator(query_set, limit)
     try:
@@ -10,5 +11,5 @@ def get_paged_set(query_set, limit=10, page=1):
     except EmptyPage:
         page = paginator.num_pages
         query_set = paginator.page(page)
-    
+
     return query_set

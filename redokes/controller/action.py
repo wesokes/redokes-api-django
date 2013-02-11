@@ -7,8 +7,11 @@ from django.http import HttpResponseRedirect
 from django import template
 from django.contrib.auth.models import Group
 
+
 class Action(object):
+
     util = redokes.util
+
     def init_defaults(self):
         self.request = None
         self.parser = None
@@ -20,32 +23,32 @@ class Action(object):
         self.auto_template = True
         self.output_type = 'html'
         self.access = None
-    
+
     def __init__(self, front_controller, *args, **kwargs):
         self.init_defaults()
-        
+
         #Setup items we get from front controller
         self.front_controller = front_controller
         self.request = front_controller.request_parser.request
         self.parser = front_controller.request_parser
-        
+
         #Apply the kwargs
         self.util.apply_config(self, kwargs)
         #Set the front controller to be in the template
 #        self.set_response_param('_front_controller', self.front_controller)
         #Initialize the logger
 #        self.logger = logging.getLogger("nooga")
-        
+
         #Run the init method
         self.init()
-        
+
          # check if we need to automatically set the template
         if self.auto_template:
             self.auto_set_template()
-        
+
     def init(self):
         pass
-    
+
     def user_can_access(self, method_name):
         # Check if all methods are public
         if self.access is None:
@@ -53,21 +56,21 @@ class Action(object):
         else:
             # Get the logged in user
             user = self.get_user()
-            
+
             # Methods are private so check access
             permissions = ['admin']
             permission_info = {}
-            
+
             # Check if specific method access is defined
             if method_name in self.access:
                 permission_info = self.access[method_name]
             elif '*' in self.access:
                 permission_info = self.access['*']
-            
+
             #Check if not none and reset
             if permission_info is not None:
                 permissions = []
-            
+
             #Add all permissions
             if type(permission_info) is str:
                 permissions.append(permission_info)
@@ -82,20 +85,20 @@ class Action(object):
                     for group in group_set:
                         group_permissions = list(group.permissions.all())
                         permissions = permissions + group_permissions
-                
-                # check access                    
+
+                # check access
                 if 'access' in permission_info:
                     access_list = permission_info['access']
                     if type(access_list) is str:
                         access_list = [access_list]
                     permissions = permissions + access_list
-                    
+
                     if "admin" in permissions:
                         if not user.is_superuser:
                             return False
             else:
                 permissions = None
-            
+
             # Check perms
             if permissions is None:
                 return True
@@ -103,36 +106,36 @@ class Action(object):
                 return False
             else:
                 return user.has_perms(permissions)
-    
+
     def get_template_name(self):
         return '%s/%s/%s.html' % (self.parser.module.replace('.', '/'), self.parser.controller, self.parser.action)
-    
+
     def get_template_names(self):
         names = []
         parts = self.parser.module.split('.') + [self.parser.controller, '{0}.html'.format(self.parser.action)]
         for i in range(len(parts)):
             names.append('/'.join(parts[i:]))
         return names
-    
+
     def auto_set_template(self):
 #        self.set_template(self.get_template_name())
         self.set_templates(self.get_template_names())
-    
+
     def set_template(self, template_name):
         if self.template_exists(template_name):
             self.template = template_name
             return self.template
-        
+
         return None
-    
+
     def set_templates(self, template_names):
         for template_name in template_names:
             if self.template_exists(template_name):
                 self.template = template_name
                 return self.template
-        
+
         return None
-    
+
     def template_exists(self, template_name):
         try:
             template.loader.get_template(template_name)
@@ -140,10 +143,10 @@ class Action(object):
         except template.TemplateDoesNotExist, e:
             return False
         return False
-    
+
     def run(self):
         return self.action_call()
-    
+
     def catch(self):
         """
         Catches an unknown action.
@@ -151,7 +154,7 @@ class Action(object):
         Override to provide custom redirection
         """
         raise Http404
-    
+
     def forward(self, action, module=None, controller=None):
         self.parser.action = action
         if module is not None:
@@ -159,7 +162,7 @@ class Action(object):
         if controller is not None:
             self.parser.controller = controller
         return self.front_controller.run()
-        
+
     def action_call(self):
         """
         Calls an action if it exists, or else calls the catch method
@@ -167,72 +170,72 @@ class Action(object):
         #Check if the action exists
         if self.action_exists() is False:
             return self.catch()
-        
+
         # Check permissions
         if self.user_can_access(self.get_action_method_name()):
             #Run the action method
             return getattr(self, self.get_action_method_name())()
         else:
             self.output_type = '403'
-    
+
     def get_action_method_name(self):
         return self.front_controller.request_parser.get_action_name(self.parser.action)
-    
+
     def action_exists(self):
         #Check if the view instance has the action
         return hasattr(self, self.get_action_method_name())
-    
+
     def render_template(self, template, context):
         return render_to_response(template, context, context_instance=RequestContext(self.request))
-    
+
     def set_response_param(self, key, value=None):
         self.front_controller.response_manager.set_param(key, value)
-        
+
     def set_response_params(self, params):
         self.front_controller.response_manager.set_params(params)
-        
+
     def update_response_params(self, params):
         self.front_controller.response_manager.update_params(params)
-    
+
     def get_response_param(self, key, value=None):
         return self.front_controller.response_manager.get_param(key, value)
-    
+
     def get_response_params(self):
         return self.front_controller.response_manager.get_params()
-    
+
     def send_headers(self):
         method_name = 'get_output_%s' % self.output_type
         if hasattr(self, method_name):
             return getattr(self, method_name)()
-    
+
     def get_output_html(self):
         return self.render_template(self.template, self.get_response_params())
-    
+
     def get_output_403(self):
         return HttpResponseForbidden("Default 403 template")
-    
+
     def set_redirect(self, url):
         self.redirect = url
         self.output_type = 'redirect'
-    
+
     def get_output_redirect(self):
         return HttpResponseRedirect(self.redirect)
-    
+
     def set_request_param(self, key, value):
         self.front_controller.request_parser.set_param(key, value)
-    
+
     def get_request_param(self, key, value=None):
         return self.front_controller.request_parser.get_param(key, value)
-    
+
     def get_request_params(self):
         return self.front_controller.request_parser.params
-    
+
     def get_user(self):
         return self.front_controller.request_parser.request.user
-    
+
     def get_cache_key(self, *args, **kwargs):
         return self.generate_cache_key(self, self.front_controller.request_parser.action, *args, **kwargs)
-    
+
     @staticmethod
     def generate_cache_key(instance, *args, **kwargs):
         parts = instance.__module__.lower().split('.')
@@ -241,4 +244,3 @@ class Action(object):
             parts.append(str(key))
             parts.append(str(kwargs[key]))
         return '_'.join(parts)
-        

@@ -1,29 +1,30 @@
 from redokes.controller.api import Api
 from django.conf import settings
 
+
 class Crud(Api):
-    
+
     def init_defaults(self):
         Api.init_defaults(self)
-        
+
         self.form_class = False
         self.primary_key = False
-        
+
         self.model_class = False
         self.lookup_class = False
         self.lookup_instance = False
-        
+
         self.access_module = None
         self.access_model = None
-    
+
     def init(self):
         Api.init(self)
-        
+
         #Create the lookup class
         if self.lookup_class:
             self.lookup_instance = self.lookup_class(params=self.front_controller.request_parser.params)
             self.lookup_instance.front_controller = self.front_controller
-            
+
         #Create the access based on the access_module and access_model
         """
         access = {
@@ -58,24 +59,27 @@ class Crud(Api):
                     continue
                 self.access.update({
                     action_key: {
-                        "access": "{0}.{1}_{2}".format(self.access_module, action_permission_map[action], self.access_model)
+                        "access": "{0}.{1}_{2}".format(
+                            self.access_module,
+                            action_permission_map[action], self.access_model
+                        )
                     }
                 })
-    
+
     def get_item_ids(self):
         ids = self.get_request_param('id', [])
         if type(ids) is not list:
             ids = [ids]
-        
+
         return ids
-    
+
     def create_action(self):
         if not self.form_class or not self.model_class or not self.lookup_class:
             return
-        
+
         #get response manager
         response_manager = self.front_controller.response_manager
-        
+
         #Create the form
         form = self.form_class(self.parser.request.POST)
         form.request = self.parser.request
@@ -85,7 +89,7 @@ class Crud(Api):
             for field, error in form.errors.iteritems():
                 for message in error:
                     response_manager.add_error(message, field)
-                    
+
         #Return the record if we had zero errors
         if not response_manager.any_errors():
             lookup = self.lookup_class({
@@ -93,20 +97,19 @@ class Crud(Api):
             })
             self.set_response_param('record', lookup.get_row())
             self.set_response_param('id', form.instance.pk)
-            
+
         return form.instance
-            
-                    
+
     def update_action(self):
         if not self.form_class:
             return
-        
+
         id = int(self.get_request_param('id', 0))
         model = self.model_class.objects.get(pk=id)
-        
+
         #get response manager
         response_manager = self.front_controller.response_manager
-        
+
         #Create the form
         form = self.form_class(self.parser.request.POST, instance=model)
         form.request = self.parser.request
@@ -116,7 +119,7 @@ class Crud(Api):
             for field, error in form.errors.iteritems():
                 for message in error:
                     response_manager.add_error(message, field)
-                    
+
         #Return the record if we had zero errors
         if not response_manager.any_errors():
             lookup = self.lookup_class({
@@ -124,18 +127,18 @@ class Crud(Api):
             })
             self.set_response_param('record', lookup.get_row())
             self.set_response_param('id', form.instance.pk)
-                    
+
         return form.instance
-    
+
     def read_action(self):
         if self.lookup_instance:
-            
+
             meta = {}
-            
+
             # run the lookup query to get the rows
             rows = list(self.lookup_instance.get_rows())
             query = self.lookup_instance.get_query_set().query
-            
+
             # add records to the response
             meta['num_records'] = self.lookup_instance.get_num_records()
             meta['total_records'] = self.lookup_instance.get_total_records()
@@ -143,15 +146,15 @@ class Crud(Api):
             meta['total_pages'] = self.lookup_instance.get_num_pages()
             meta['next'] = None
             meta['previous'] = None
-            
+
             if settings.DEBUG:
                 debug = {}
                 debug['query'] = str(query)
                 self.set_response_param('debug', debug)
-            
+
             self.set_response_param('meta', meta)
             self.set_response_param('records', rows)
-            
+
     def delete_action(self):
         """
         Looks for the param of id.
@@ -160,13 +163,13 @@ class Crud(Api):
         #Check if we have a model class
         if not self.model_class:
             return
-        
+
         #Process the ids
         ids = self.get_item_ids()
-            
+
         #Get the objects to delete
         delete_items = self.model_class.objects.filter(pk__in=ids)
         for delete_item in delete_items:
             delete_item.delete()
-        
+
         self.set_response_param('records', ids)
