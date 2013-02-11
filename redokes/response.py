@@ -1,5 +1,3 @@
-from django.http import HttpResponse, HttpRequest
-from django.http import Http404
 import json
 from decimal import Decimal
 

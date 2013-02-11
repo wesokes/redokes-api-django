@@ -1,11 +1,11 @@
 import json
 import logging
 import urllib2
-import time
-import hashlib
 import os
 import tempfile
 from django.conf import settings
+from PIL import Image as PILImage
+import jsonpickle
 
 """""""""""""""""""""""""""""""""""""""
  Image manipulation class
@@ -40,8 +40,8 @@ class Image():
 
         #Create the temp file
         file_name, file_extension = os.path.splitext(url)
-        file_hash = hashlib.md5(str(time.time())).hexdigest()
-        file_path = '/tmp/{0}{1}'.format(file_hash, file_extension)
+        # file_hash = hashlib.md5(str(time.time())).hexdigest()
+        # file_path = '/tmp/{0}{1}'.format(file_hash, file_extension)
         f = tempfile.NamedTemporaryFile()
         f.write(url_handler.read())
         #f.close()
@@ -143,7 +143,7 @@ def encode(o):
 
 def dump_encode(o):
     try:
-        output = o.__dict__
+        o.__dict__
     except:
         o.__dict__ = {"test": "test"}
     return o.__dict__

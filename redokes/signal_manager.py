@@ -14,7 +14,7 @@ class SignalManager(object):
                 self.init_signal(signal_name)
 
     def init_signal(self, signal_name):
-        signal = getattr(signals, signal_name)
+        # signal = getattr(signals, signal_name)
         method_name = 'on_%s' % signal_name
 
         def fire_signal(sender, **kwargs):

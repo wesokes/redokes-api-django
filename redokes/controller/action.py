@@ -140,7 +140,7 @@ class Action(object):
         try:
             template.loader.get_template(template_name)
             return True
-        except template.TemplateDoesNotExist, e:
+        except template.TemplateDoesNotExist:
             return False
         return False
 

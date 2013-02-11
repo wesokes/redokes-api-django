@@ -190,7 +190,7 @@ class Lookup(object):
         return self.rows
 
     def get_row(self):
-        limit = self.start + 1
+        # limit = self.start + 1
         rows = self.get_rows()
         row = rows[0]
         return row

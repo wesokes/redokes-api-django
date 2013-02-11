@@ -1,4 +1,4 @@
-from redokes.request.Parser import Parser
+# from redokes.request.Parser import Parser
 from redokes.controller import Front
 from django.http import HttpResponse
 from django.http import QueryDict

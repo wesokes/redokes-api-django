@@ -1,7 +1,8 @@
+from dateutil.relativedelta import relativedelta
 import redokes.util
 import datetime
-from dateutil.relativedelta import *
-from django.db.models import Count, Avg, Max
+
+from django.db.models import Count
 
 now = datetime.datetime.now()
 today = datetime.datetime.today()
@@ -146,7 +147,7 @@ class Stats(object):
         if 'start_date' in self.params:
             try:
                 self.start_date = datetime.datetime.strptime(self.params['start_date'], "%Y/%m/%d")
-            except Exception, e:
+            except Exception:
                 pass
             del self.params['start_date']
 
@@ -156,7 +157,7 @@ class Stats(object):
                 end_date = datetime.datetime.strptime(self.params['end_date'], "%Y/%m/%d")
                 if end_date > self.start_date:
                     self.end_date = end_date
-            except Exception, e:
+            except Exception:
                 pass
             del self.params['end_date']
 
