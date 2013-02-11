@@ -5,7 +5,7 @@ import os
 import tempfile
 from django.conf import settings
 from PIL import Image as PILImage
-import jsonpickle
+# import jsonpickle
 
 """""""""""""""""""""""""""""""""""""""
  Image manipulation class
@@ -138,7 +138,8 @@ def dump(o):
 
 
 def encode(o):
-    return json.dumps(json.loads(jsonpickle.encode(o)), indent=4, sort_keys=True)
+    return ''
+    # return json.dumps(json.loads(jsonpickle.encode(o)), indent=4, sort_keys=True)
 
 
 def dump_encode(o):

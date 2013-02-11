@@ -1,3 +1,4 @@
+from pprint import pprint
 from redokes.request.parser import Parser
 from redokes.response import Manager as ResponseManager
 from django.http import Http404
@@ -21,8 +22,9 @@ class Front(object):
 
     def run(self):
         #Build the import
-        import_controller = self.request_parser.get_controller_name()
-        import_path = '{0}.controller.{1}'.format(self.request_parser.module, import_controller)
+        import_controller_module_name = self.request_parser.get_controller_name()
+        import_controller_class_name = self.request_parser.get_controller_class_name()
+        import_path = '{0}.controller.{1}'.format(self.request_parser.module, import_controller_module_name)
 
         paths = [import_path] + ['{0}.{1}'.format(path, import_path) for path in settings.INSTALLED_APPS]
 
@@ -31,12 +33,12 @@ class Front(object):
 
         for path in paths:
             try:
-                controller = __import__(path, globals(), locals(), [import_controller], -1)
+                controller = __import__(path, globals(), locals(), [import_controller_module_name], -1)
                 self.request_parser.module = '.'.join(path.split('.')[:-2])
-                self.controller_instance = getattr(controller, import_controller)(self)
+                self.controller_instance = getattr(controller, import_controller_class_name)(self)
             except:
                 pass
-#                print 'did not find {0}'.format(path)
+               # print 'did not find {0}'.format(path)
             if self.controller_instance is not None:
                 continue
 

@@ -121,6 +121,12 @@ class Parser(object):
         if name is False:
             name = self.controller
         parts = name.split('-')
+        return '_'.join(parts)
+
+    def get_controller_class_name(self, name=False):
+        if name is False:
+            name = self.controller
+        parts = name.split('-')
         for i in range(len(parts)):
             parts[i] = parts[i].capitalize()
         return ''.join(parts)
