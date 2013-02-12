@@ -25,7 +25,7 @@ class Front(object):
 
         paths = [import_path]
         paths += ['{0}.{1}'.format(path, import_path) for path in self._app_directories]
-
+        
         #Try to import the controller
         controller = None
 
@@ -74,11 +74,15 @@ class Front(object):
         Front._app_directories = list(paths)
 
     @staticmethod
-    def register_app(name=None, pattern=None, **kwargs):
-        config = {
-            'module': name
-        }
-        config.update(kwargs)
+    def register_pattern(pattern=None, module=None, controller=None, action=None):
+        config = {}
+        if module:
+            config['module'] = module
+        if controller:
+            config['controller'] = controller
+        if action:
+            config['action'] = action
+
         Front._url_patterns.append(
             url(r'^({0})$'.format(pattern), 'redokes.views.route', config)
         )
