@@ -1,4 +1,5 @@
 class Base(object):
+
     config = {}
 
     def __new__(cls, config={}, *args, **kwargs):

@@ -1,3 +1,4 @@
+from pprint import pprint
 from django.conf.urls import url
 from redokes.request.parser import Parser
 from redokes.response import Manager as ResponseManager
@@ -24,7 +25,6 @@ class Front(object):
 
         paths = [import_path]
         paths += ['{0}.{1}'.format(path, import_path) for path in self._app_directories]
-        # paths += ['{0}.{1}'.format(path, import_path) for path in settings.INSTALLED_APPS]
 
         #Try to import the controller
         controller = None
