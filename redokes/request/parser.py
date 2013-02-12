@@ -11,14 +11,17 @@ class Parser(object):
         self.params = {}
         self.args = []
         self.request_string = ''
+        self.module = None
+        self.controller = None
+        self.action = None
 
-        config = RedokesConfig.getConfig()
-        self.module = config['default_module']
-        self.controller = config['default_controller']
-        self.action = config['default_action']
-
-    def __init__(self, request, request_string, **kwargs):
+    def __init__(self, request, request_string, *args, **kwargs):
         self.init_defaults()
+        self.request = request
+        self.request_string = request_string
+
+        self.url_args = args
+        self.url_kwargs = kwargs
 
         self.update_request_params(request)
 
@@ -36,15 +39,18 @@ class Parser(object):
             except ValueError:
                 pass
 
-        self.request = request
-        self.request_string = request_string
         self.logger = logging.getLogger("nooga")
+
         self.parse(self.request_string)
 
-        # handle any overrides
         self.module = kwargs.get('module', self.module)
         self.controller = kwargs.get('controller', self.controller)
         self.action = kwargs.get('action', self.action)
+
+        config = RedokesConfig.getConfig()
+        self.module = self.module or config['default_module']
+        self.controller = self.controller or config['default_controller']
+        self.action = self.action or config['default_action']
 
     def update_request_params(self, request):
 
@@ -61,15 +67,34 @@ class Parser(object):
             self.set_param(key, value)
 
     def parse(self, request_string):
+        request_string = request_string.strip('/')
+
+        # check if we matched specific parts of the url to be module/controller/action
+        num_url_args = len(self.url_args)
+
+        components = [
+            'module',
+            'controller',
+            'action'
+        ]
+
+        component_index = 0
+        while component_index < num_url_args:
+            setattr(self, components[component_index], self.url_args[component_index].replace('/', '.'))
+            request_string = request_string.replace(self.url_args[component_index], '')
+            request_string = request_string.strip('/')
+            component_index += 1
+
         #Process the request string
-        route_list = request_string.strip("/").split("/")
-        route_list_length = len(route_list)
-        if route_list_length and len(route_list[0]):
-            self.module = route_list[0]
-            if route_list_length > 1:
-                self.controller = route_list[1]
-                if route_list_length > 2:
-                    self.action = route_list[2]
+        route_list = request_string.split('/')
+        route_index = 0
+        num_route_parts = len(route_list)
+        while route_index < num_route_parts:
+            if len(route_list[route_index]):
+                if getattr(self, components[component_index]) is None:
+                    setattr(self, components[component_index], route_list[route_index])
+            route_index += 1
+            component_index += 1
 
         #Look for any extra key values in the url
         extra_parts = route_list[3:]

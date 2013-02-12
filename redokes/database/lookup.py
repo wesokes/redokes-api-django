@@ -264,13 +264,11 @@ class Lookup(object):
             'foreign_key': foreign_key
         }
 
-    def get_method_name(self, name, prefix=''):
-        method = prefix
+    def get_method_name(self, name, prefix=None):
         name = name.lower()
-        name_parts = name.split("_")
-        for name_part in name_parts:
-            method = method + "_" + name_part.lower()
-        return method
+        if prefix:
+            return '{0}__{1}'.format(prefix, name)
+        return name
 
     """""""""""""""""""""""""""""""""
     Default Filters

@@ -12,8 +12,8 @@ class Front(object):
     _url_patterns = ['']
     _auto_discover = False
 
-    def __init__(self, request, request_string, **kwargs):
-        self.request_parser = Parser(request, request_string, **kwargs)
+    def __init__(self, request, request_string, *args, **kwargs):
+        self.request_parser = Parser(request, request_string, *args, **kwargs)
         self.response_manager = ResponseManager()
         self.controller_instance = None
 
@@ -25,7 +25,7 @@ class Front(object):
 
         paths = [import_path]
         paths += ['{0}.{1}'.format(path, import_path) for path in self._app_directories]
-        
+
         #Try to import the controller
         controller = None
 
@@ -85,6 +85,9 @@ class Front(object):
 
         Front._url_patterns.append(
             url(r'^({0})$'.format(pattern), 'redokes.views.route', config)
+        )
+        Front._url_patterns.append(
+            url(r'({0}/?.*)'.format(pattern), 'redokes.views.route', config)
         )
 
     @staticmethod
