@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import QueryDict
 
 
-def route(request, request_string):
+def route(request, request_string, **kwargs):
     XS_SHARING_ALLOWED_ORIGINS = '*'
     XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
     if request.method == 'OPTIONS':
@@ -15,7 +15,7 @@ def route(request, request_string):
 
     if request.method == 'PUT' or request.method == 'DELETE':
         request.POST = QueryDict(request.raw_post_data)
-    front_controller = Front(request, request_string)
+    front_controller = Front(request, request_string, **kwargs)
     response = front_controller.run()
     response['Access-Control-Allow-Origin'] = XS_SHARING_ALLOWED_ORIGINS
     response['Access-Control-Allow-Methods'] = ",".join(XS_SHARING_ALLOWED_METHODS)

@@ -5,22 +5,20 @@ from redokes.config.redokes import RedokesConfig
 
 class Parser(object):
 
-    #Constructor
-    def __init__(self, request, request_string):
-        #Properties
+    def init_defaults(self):
         self.logger = None
         self.request = None
+        self.params = {}
+        self.args = []
+        self.request_string = ''
 
         config = RedokesConfig.getConfig()
-
         self.module = config['default_module']
         self.controller = config['default_controller']
         self.action = config['default_action']
 
-        self.controller_instance = None
-        self.params = {}
-        self.args = []
-        self.request_string = ''
+    def __init__(self, request, request_string, **kwargs):
+        self.init_defaults()
 
         self.update_request_params(request)
 
@@ -43,7 +41,11 @@ class Parser(object):
         self.logger = logging.getLogger("nooga")
         self.parse(self.request_string)
 
-    #Methods
+        # handle any overrides
+        self.module = kwargs.get('module', self.module)
+        self.controller = kwargs.get('controller', self.controller)
+        self.action = kwargs.get('action', self.action)
+
     def update_request_params(self, request):
 
          # copy get params
@@ -80,6 +82,7 @@ class Parser(object):
                 extra_params[extra_parts[i]] = False
 
         self.update_params(extra_params)
+
         return {
             "module": self.module,
             "controller": self.controller,
