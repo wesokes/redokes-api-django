@@ -76,7 +76,7 @@ class Action(object):
     def urls(cls):
         pattern_list = []
         for method_name in cls.get_action_method_names():
-            pattern_list.append((r'{0}'.format(method_name), cls.route))
+            pattern_list.append((r'(?P<action>{0})'.format(method_name), cls.route))
         url_patterns = patterns(
             '',
             *pattern_list
@@ -255,16 +255,16 @@ class Action(object):
         return render_to_response(template, context, context_instance=RequestContext(self.request))
 
     def set_response_param(self, key, value=None):
-        self.front_controller.response_manager.set_param(key, value)
+        self.response_manager.set_param(key, value)
 
     def set_response_params(self, params):
-        self.front_controller.response_manager.set_params(params)
+        self.response_manager.set_params(params)
 
     def update_response_params(self, params):
-        self.front_controller.response_manager.update_params(params)
+        self.response_manager.update_params(params)
 
     def get_response_param(self, key, value=None):
-        return self.front_controller.response_manager.get_param(key, value)
+        return self.response_manager.get_param(key, value)
 
     def get_response_params(self):
         return self.response_manager.get_params()
@@ -337,7 +337,7 @@ class Api(Action):
         return records
 
     def add_message(self, str):
-        self.front_controller.response_manager.add_message(str)
+        self.response_manager.add_message(str)
 
     def add_error(self, message, field=''):
         self.response_manager.add_error(message, field)
