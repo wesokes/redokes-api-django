@@ -4,5 +4,7 @@ pep8
 psycopg2==2.4.5
 pyflakes
 python-dateutil
-git+https://github.com/wesokes/django-query-builder.git@0.3.2
 pytz==2012h
+south==0.7.6
+
+git+https://github.com/wesokes/django-query-builder.git@0.3.2

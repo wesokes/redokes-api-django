@@ -1,6 +1,10 @@
+import inspect
+from optparse import OptionParser
+import os
+from pprint import pprint
 from django import template
 from django.conf import settings
-from django.conf.urls import url
+from django.conf.urls import url, patterns
 from django.contrib.auth.models import Group
 from django.forms import model_to_dict
 from django.shortcuts import render_to_response
@@ -18,23 +22,25 @@ class Action(object):
 
     def init_defaults(self):
         self.request = None
+        self.action = None
+        self.response_manager = ResponseManager()
         self.parser = None
-        self.template = ''
-        self.redirect = ''
+        self.template = None
+        self.redirect = None
         self.do_render = True
-        self.front_controller = None
-        self._front_controller = None
+        # self.front_controller = None
+        # self._front_controller = None
         self.auto_template = True
         self.output_type = 'html'
         self.access = None
 
-    def __init__(self, front_controller, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.init_defaults()
 
         #Setup items we get from front controller
-        self.front_controller = front_controller
-        self.request = front_controller.request_parser.request
-        self.parser = front_controller.request_parser
+        # self.front_controller = front_controller
+        # self.request = front_controller.request_parser.request
+        # self.parser = front_controller.request_parser
 
         #Apply the kwargs
         self.util.apply_config(self, kwargs)
@@ -47,11 +53,66 @@ class Action(object):
         self.init()
 
          # check if we need to automatically set the template
-        if self.auto_template:
-            self.auto_set_template()
+        # if self.auto_template:
+        #     self.auto_set_template()
 
     def init(self):
         pass
+
+    @classmethod
+    def get_methods(cls):
+        return inspect.getmembers(cls, predicate=inspect.ismethod)
+
+    @classmethod
+    def get_action_method_names(cls):
+        method_names = []
+        methods = cls.get_methods()
+        for method_name, method in methods:
+            if '__action' in method_name:
+                method_names.append(method_name[:-8])
+        return method_names
+
+    @classmethod
+    def urls(cls):
+        pattern_list = []
+        for method_name in cls.get_action_method_names():
+            pattern_list.append((r'{0}'.format(method_name), cls.route))
+        url_patterns = patterns(
+            '',
+            *pattern_list
+        )
+        return url_patterns
+
+    def dispatch_action(self, request=None, action=None):
+        """
+        Checks if the action exists and invokes the method for the action
+        @param request: the django request object
+        @type request: HttpRequest
+        @param action: the action to be performed as determined by the url
+        @type action: str
+        """
+        if request is not None:
+            self.request = request
+        if action is not None:
+            self.action = action
+        method_name = '{0}__action'.format(self.action)
+        if hasattr(self, method_name):
+            getattr(self, method_name)()
+
+    @classmethod
+    def route(cls, request, **kwargs):
+        """
+        @param request: the django request object
+        @type request: HttpRequest
+        @param kwargs: additional params
+        @type kwargs: dict
+        @return: the django response object
+        @rtype: HttpResponse
+        """
+        action = kwargs.get('action')
+        api = cls(request=request, action=action)
+        api.dispatch_action()
+        return api.get_response()
 
     def user_can_access(self, method_name):
         # Check if all methods are public
@@ -116,7 +177,8 @@ class Action(object):
 
     def get_template_names(self):
         names = []
-        parts = self.parser.module.split('.') + [self.parser.controller, '{0}.html'.format(self.parser.action)]
+        return []
+        parts = [self.parser.controller, '{0}.html'.format(self.parser.action)]
         for i in range(len(parts)):
             names.append('/'.join(parts[i:]))
         return names
@@ -205,9 +267,9 @@ class Action(object):
         return self.front_controller.response_manager.get_param(key, value)
 
     def get_response_params(self):
-        return self.front_controller.response_manager.get_params()
+        return self.response_manager.get_params()
 
-    def send_headers(self):
+    def get_response(self):
         method_name = 'get_output_%s' % self.output_type
         if hasattr(self, method_name):
             return getattr(self, method_name)()
@@ -266,7 +328,7 @@ class Api(Action):
         return self.get_output_json()
 
     def get_output_json(self):
-        return HttpResponse(self.front_controller.response_manager.get_response_string(), mimetype="application/json")
+        return HttpResponse(self.response_manager.get_response_string(), mimetype="application/json")
 
     def convert_models(self, models):
         records = []
@@ -278,7 +340,7 @@ class Api(Action):
         self.front_controller.response_manager.add_message(str)
 
     def add_error(self, message, field=''):
-        self.front_controller.response_manager.add_error(message, field)
+        self.response_manager.add_error(message, field)
 
 
 class Crud(Api):

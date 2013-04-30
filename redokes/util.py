@@ -4,7 +4,7 @@ import urllib2
 import os
 import tempfile
 from django.conf import settings
-from PIL import Image as PILImage
+# from PIL import Image as PILImage
 # import jsonpickle
 
 """""""""""""""""""""""""""""""""""""""
