@@ -1,7 +1,5 @@
 import inspect
 from optparse import OptionParser
-import os
-from pprint import pprint
 from django import template
 from django.conf import settings
 from django.conf.urls import url, patterns
@@ -22,14 +20,12 @@ class Action(object):
 
     def init_defaults(self):
         self.request = None
-        self.action = None
+        self.action = 'index'
         self.response_manager = ResponseManager()
         self.parser = None
         self.template = None
         self.redirect = None
         self.do_render = True
-        # self.front_controller = None
-        # self._front_controller = None
         self.auto_template = True
         self.output_type = 'html'
         self.access = None
@@ -37,24 +33,17 @@ class Action(object):
     def __init__(self, **kwargs):
         self.init_defaults()
 
-        #Setup items we get from front controller
-        # self.front_controller = front_controller
-        # self.request = front_controller.request_parser.request
         # self.parser = front_controller.request_parser
 
-        #Apply the kwargs
+        # Apply the kwargs
         self.util.apply_config(self, kwargs)
-        #Set the front controller to be in the template
-#        self.set_response_param('_front_controller', self.front_controller)
-        #Initialize the logger
-#        self.logger = logging.getLogger("nooga")
 
-        #Run the init method
+        # Run the init method
         self.init()
 
          # check if we need to automatically set the template
-        # if self.auto_template:
-        #     self.auto_set_template()
+        if self.auto_template:
+            self.auto_set_template()
 
     def init(self):
         pass
@@ -77,6 +66,11 @@ class Action(object):
         pattern_list = []
         for method_name in cls.get_action_method_names():
             pattern_list.append((r'(?P<action>{0})'.format(method_name), cls.route))
+
+        # catch everything else that didn't match an action
+        pattern_list.append((r'', cls.route))
+
+        # create url patterns
         url_patterns = patterns(
             '',
             *pattern_list
@@ -109,7 +103,7 @@ class Action(object):
         @return: the django response object
         @rtype: HttpResponse
         """
-        action = kwargs.get('action')
+        action = kwargs.get('action', 'index')
         api = cls(request=request, action=action)
         api.dispatch_action()
         return api.get_response()
@@ -173,19 +167,15 @@ class Action(object):
                 return user.has_perms(permissions)
 
     def get_template_name(self):
-        return '%s/%s/%s.html' % (self.parser.module.replace('.', '/'), self.parser.controller, self.parser.action)
-
-    def get_template_names(self):
-        names = []
-        return []
-        parts = [self.parser.controller, '{0}.html'.format(self.parser.action)]
-        for i in range(len(parts)):
-            names.append('/'.join(parts[i:]))
-        return names
+        template_name = '{0}/{1}/{2}.html'.format(
+            self.__class__.__module__.split('.')[0].lower(),
+            self.__class__.__name__.lower(),
+            self.action.lower()
+        )
+        return template_name
 
     def auto_set_template(self):
-#        self.set_template(self.get_template_name())
-        self.set_templates(self.get_template_names())
+        self.set_template(self.get_template_name())
 
     def set_template(self, template_name):
         if self.template_exists(template_name):

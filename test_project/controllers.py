@@ -4,12 +4,14 @@ from redokes.controllers import Api, Action
 class TestingAround(Api):
 
     def index__action(self):
-        print 'index test'
         self.set_response_param('testing', 'just a test')
 
+    def index2__action(self):
+        self.set_response_param('testing2', 'just another test')
 
-class WesController(Action):
+
+class Wes(Action):
 
     def index__action(self):
-        print 'index test'
+        pass
 
