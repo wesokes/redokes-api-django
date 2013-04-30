@@ -129,4 +129,3 @@ class ModelDimension(Dimension):
             query.group_by(self.id_name)
         else:
             query.group_by(self.pk, self.model)
-
