@@ -1,4 +1,4 @@
-from redokes.controllers import Api, Action
+from redokes.controllers.base import Api, Action
 
 
 class TestingAround(Api):

@@ -168,7 +168,7 @@ class Action(object):
 
     def get_template_name(self):
         template_name = '{0}/{1}/{2}.html'.format(
-            self.__class__.__module__.split('.')[0].lower(),
+            self.__class__.__module__.split('.')[-2].lower(),
             self.__class__.__name__.lower(),
             self.action.lower()
         )
