@@ -8,13 +8,7 @@ setup(
     description = "Redokes Framework.",
     include_package_data = True,
     install_requires = [
-        "django>=1.4",
-        "python-memcached",
-        "django_extensions",
-        "ipython",
-        "beautifulsoup4",
-        "jsonpickle",
-        "python-dateutil",
+
     ],
     zip_safe = False
 )
