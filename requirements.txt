@@ -5,6 +5,7 @@ psycopg2==2.4.5
 pyflakes
 python-dateutil
 pytz==2012h
+requests
 south==0.7.6
 
 git+https://github.com/wesokes/django-query-builder.git@0.3.2

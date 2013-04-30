@@ -123,7 +123,6 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'redokes',
     'test_project',
-    'test_project.apps.test_subapp',
     'querybuilder',
     'south',
 )

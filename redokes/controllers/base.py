@@ -1,5 +1,4 @@
 import inspect
-from optparse import OptionParser
 from django import template
 from django.conf import settings
 from django.conf.urls import url, patterns
@@ -21,8 +20,8 @@ class Action(object):
     def init_defaults(self):
         self.request = None
         self.action = 'index'
-        self.response_manager = ResponseManager()
-        self.parser = None
+        self.response_manager = None
+        self.request_parser = None
         self.template = None
         self.redirect = None
         self.do_render = True
@@ -32,8 +31,6 @@ class Action(object):
 
     def __init__(self, **kwargs):
         self.init_defaults()
-
-        # self.parser = front_controller.request_parser
 
         # Apply the kwargs
         self.util.apply_config(self, kwargs)
@@ -46,7 +43,8 @@ class Action(object):
             self.auto_set_template()
 
     def init(self):
-        pass
+        self.request_parser = Parser(self.request, '')
+        self.response_manager = ResponseManager()
 
     @classmethod
     def get_methods(cls):
@@ -212,11 +210,11 @@ class Action(object):
         raise Http404
 
     def forward(self, action, module=None, controller=None):
-        self.parser.action = action
+        self.request_parser.action = action
         if module is not None:
-            self.parser.module = module
+            self.request_parser.module = module
         if controller is not None:
-            self.parser.controller = controller
+            self.request_parser.controller = controller
         return self.front_controller.run()
 
     def action_call(self):
@@ -233,9 +231,6 @@ class Action(object):
             return getattr(self, self.get_action_method_name())()
         else:
             self.output_type = '403'
-
-    def get_action_method_name(self):
-        return self.front_controller.request_parser.get_action_name(self.parser.action)
 
     def action_exists(self):
         #Check if the view instance has the action
@@ -278,19 +273,19 @@ class Action(object):
         return HttpResponseRedirect(self.redirect)
 
     def set_request_param(self, key, value):
-        self.front_controller.request_parser.set_param(key, value)
+        self.request_parser.set_param(key, value)
 
     def get_request_param(self, key, value=None):
-        return self.front_controller.request_parser.get_param(key, value)
+        return self.request_parser.get_param(key, value)
 
     def get_request_params(self):
-        return self.front_controller.request_parser.params
+        return self.request_parser.params
 
     def get_user(self):
-        return self.front_controller.request_parser.request.user
+        return self.request_parser.request.user
 
     def get_cache_key(self, *args, **kwargs):
-        return self.generate_cache_key(self, self.front_controller.request_parser.action, *args, **kwargs)
+        return self.generate_cache_key(self, self.request_parser.action, *args, **kwargs)
 
     @staticmethod
     def generate_cache_key(instance, *args, **kwargs):
@@ -314,7 +309,7 @@ class Api(Action):
         }
 
     def get_output_403(self):
-        self.add_error("You do not have permission to complete this action - {0}".format(self.parser.request_string))
+        self.add_error("You do not have permission to complete this action - {0}".format(self.request_parser.request_string))
         return self.get_output_json()
 
     def get_output_json(self):
@@ -353,7 +348,7 @@ class Crud(Api):
 
         #Create the lookup class
         if self.lookup_class:
-            self.lookup_instance = self.lookup_class(params=self.front_controller.request_parser.params)
+            self.lookup_instance = self.lookup_class(params=self.request_parser.params)
             self.lookup_instance.front_controller = self.front_controller
 
         #Create the access based on the access_module and access_model
@@ -409,11 +404,11 @@ class Crud(Api):
             return
 
         #get response manager
-        response_manager = self.front_controller.response_manager
+        response_manager = self.response_manager
 
         #Create the form
-        form = self.form_class(self.parser.request.POST)
-        form.request = self.parser.request
+        form = self.form_class(self.request_parser.request.POST)
+        form.request = self.request_parser.request
         if form.is_valid():
             form.save()
         else:
@@ -439,11 +434,11 @@ class Crud(Api):
         model = self.model_class.objects.get(pk=id)
 
         #get response manager
-        response_manager = self.front_controller.response_manager
+        response_manager = self.response_manager
 
         #Create the form
-        form = self.form_class(self.parser.request.POST, instance=model)
-        form.request = self.parser.request
+        form = self.form_class(self.request_parser.request.POST, instance=model)
+        form.request = self.request_parser.request
         if form.is_valid():
             form.save()
         else:
@@ -515,11 +510,11 @@ class Rest(Crud):
     def init(self):
         Crud.init(self)
 
-        self.pk_value = self.parser.action
+        self.pk_value = self.request_parser.action
         if self.lookup_instance and self.pk_value:
             self.lookup_instance.default_queryset = self.lookup_instance.default_queryset.filter(pk=self.pk_value)
 
-        self.parser.action = self.front_controller.request.method
+        self.request_parser.action = self.request_parser.request.method
 
     def get_item_ids(self):
         ids = Crud.get_item_ids(self)
@@ -603,6 +598,7 @@ class ExternalApi(Crud):
 
     def init_defaults(self):
         Crud.init_defaults(self)
+        self.api_url = None
         self.allowed_params = {}
 
 
@@ -628,7 +624,7 @@ class Stats(Api):
     def init(self):
         # Create the stats class
         if self.stats_class:
-            self.stats_instance = self.stats_class(params=self.front_controller.request_parser.params)
+            self.stats_instance = self.stats_class(params=self.request_parser.params)
         if self.entity_class:
             self.entity_query_set = self.entity_class.objects.values(
                 *self.entity_values
