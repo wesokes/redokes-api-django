@@ -75,6 +75,21 @@ class Action(object):
         )
         return url_patterns
 
+    @classmethod
+    def route(cls, request, **kwargs):
+        """
+        @param request: the django request object
+        @type request: HttpRequest
+        @param kwargs: additional params
+        @type kwargs: dict
+        @return: the django response object
+        @rtype: HttpResponse
+        """
+        action = kwargs.get('action', 'index')
+        api = cls(request=request, action=action)
+        api.dispatch_action()
+        return api.get_response()
+
     def dispatch_action(self, request=None, action=None):
         """
         Checks if the action exists and invokes the method for the action
@@ -91,79 +106,6 @@ class Action(object):
         if hasattr(self, method_name):
             getattr(self, method_name)()
 
-    @classmethod
-    def route(cls, request, **kwargs):
-        """
-        @param request: the django request object
-        @type request: HttpRequest
-        @param kwargs: additional params
-        @type kwargs: dict
-        @return: the django response object
-        @rtype: HttpResponse
-        """
-        action = kwargs.get('action', 'index')
-        api = cls(request=request, action=action)
-        api.dispatch_action()
-        return api.get_response()
-
-    def user_can_access(self, method_name):
-        # Check if all methods are public
-        if self.access is None:
-            return True
-        else:
-            # Get the logged in user
-            user = self.get_user()
-
-            # Methods are private so check access
-            permissions = ['admin']
-            permission_info = {}
-
-            # Check if specific method access is defined
-            if method_name in self.access:
-                permission_info = self.access[method_name]
-            elif '*' in self.access:
-                permission_info = self.access['*']
-
-            #Check if not none and reset
-            if permission_info is not None:
-                permissions = []
-
-            #Add all permissions
-            if type(permission_info) is str:
-                permissions.append(permission_info)
-            elif permission_info is not None:
-                # check group
-                if 'group' in permission_info:
-                    # check if user is in group
-                    groups = permission_info['group']
-                    if type(groups) is str:
-                        groups = [groups]
-                    group_set = Group.objects.filter(name__in=groups).prefetch_related()
-                    for group in group_set:
-                        group_permissions = list(group.permissions.all())
-                        permissions = permissions + group_permissions
-
-                # check access
-                if 'access' in permission_info:
-                    access_list = permission_info['access']
-                    if type(access_list) is str:
-                        access_list = [access_list]
-                    permissions = permissions + access_list
-
-                    if "admin" in permissions:
-                        if not user.is_superuser:
-                            return False
-            else:
-                permissions = None
-
-            # Check perms
-            if permissions is None:
-                return True
-            elif not len(permissions):
-                return False
-            else:
-                return user.has_perms(permissions)
-
     def get_template_name(self):
         template_name = '{0}/{1}/{2}.html'.format(
             self.__class__.__module__.split('.')[-2].lower(),
@@ -179,14 +121,6 @@ class Action(object):
         if self.template_exists(template_name):
             self.template = template_name
             return self.template
-
-        return None
-
-    def set_templates(self, template_names):
-        for template_name in template_names:
-            if self.template_exists(template_name):
-                self.template = template_name
-                return self.template
 
         return None
 
@@ -295,6 +229,64 @@ class Action(object):
             parts.append(str(key))
             parts.append(str(kwargs[key]))
         return '_'.join(parts)
+
+    def user_can_access(self, method_name):
+        # Check if all methods are public
+        if self.access is None:
+            return True
+        else:
+            # Get the logged in user
+            user = self.get_user()
+
+            # Methods are private so check access
+            permissions = ['admin']
+            permission_info = {}
+
+            # Check if specific method access is defined
+            if method_name in self.access:
+                permission_info = self.access[method_name]
+            elif '*' in self.access:
+                permission_info = self.access['*']
+
+            #Check if not none and reset
+            if permission_info is not None:
+                permissions = []
+
+            #Add all permissions
+            if type(permission_info) is str:
+                permissions.append(permission_info)
+            elif permission_info is not None:
+                # check group
+                if 'group' in permission_info:
+                    # check if user is in group
+                    groups = permission_info['group']
+                    if type(groups) is str:
+                        groups = [groups]
+                    group_set = Group.objects.filter(name__in=groups).prefetch_related()
+                    for group in group_set:
+                        group_permissions = list(group.permissions.all())
+                        permissions = permissions + group_permissions
+
+                # check access
+                if 'access' in permission_info:
+                    access_list = permission_info['access']
+                    if type(access_list) is str:
+                        access_list = [access_list]
+                    permissions = permissions + access_list
+
+                    if "admin" in permissions:
+                        if not user.is_superuser:
+                            return False
+            else:
+                permissions = None
+
+            # Check perms
+            if permissions is None:
+                return True
+            elif not len(permissions):
+                return False
+            else:
+                return user.has_perms(permissions)
 
 
 class Api(Action):
